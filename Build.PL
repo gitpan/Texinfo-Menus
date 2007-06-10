@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #---------------------------------------------------------------------
-# $Id: Build.PL 1641 2007-02-03 20:16:24Z cjm $
+# $Id: Build.PL 1809 2007-06-10 01:15:30Z cjm $
 # Copyright 2006 Christopher J. Madsen
 #
 # Build.PL for Texinfo-Menus
@@ -16,21 +16,30 @@ use My_Build;          # Our customized version of Module::Build
 my $builder = My_Build->new(
   module_name        => 'Texinfo::Menus',
   license            => 'perl',
-  dist_author        => 'Christopher J. Madsen <cjm@pobox.com>',
+  dist_author        => 'Christopher J. Madsen <perl@cjmweb.net>',
   dist_version_from  => 'lib/Texinfo/Menus.pm',
   requires => {
-       perl         => '5.6.0',
-       'Test::More' => 0,
+       perl            => '5.6.0',
   },
-  build_requires     => { FindBin => 0, 'Module::Build' => 0 },
+  build_requires => {
+       FindBin         => 0,
+       'Module::Build' => 0,
+       'Test::More'    => 0,
+  },
   dynamic_config     => 1,      # We have the --no-scripts option
   get_options        => { 'no-scripts' => undef },
   add_to_cleanup     => [ 't/testing' ],
   create_makefile_pl => 'passthrough',
+  meta_merge         => { no_index => { file => ['My_Build.pm'] }},
 );
 
 my @scripts;
-@scripts = qw(bin/up_menus) unless $builder->args('no-scripts');
+
+if ($builder->args('no-scripts')) {
+  $builder->dispatch('clean');   # The scripts might already be in blib/
+} else {
+  @scripts = qw(bin/up_menus);
+}
 
 $builder->script_files(\@scripts);
 
