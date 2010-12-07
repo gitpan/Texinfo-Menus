@@ -4,7 +4,6 @@ package Texinfo::Menus;
 # Copyright 1994-2007 Christopher J. Madsen
 #
 # Author: Christopher J. Madsen <perl@cjmweb.net>
-# $Id: Menus.pm 1809 2007-06-10 01:15:30Z cjm $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -14,15 +13,15 @@ package Texinfo::Menus;
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either the
 # GNU General Public License or the Artistic License for more details.
 #
-# Update menus and node structure in Texinfo files
+# ABSTRACT: Update node links and menus in Texinfo documents
 #---------------------------------------------------------------------
 
-require 5.006;
+use 5.008;
 
 use IO::File;
 use strict;
 use vars qw(
-    $descColumn $level $masterMenu $menuMark $node $printKids $section
+    $descColumn $layers $level $masterMenu $menuMark $node $printKids $section
     $No_Comments $No_Detail $Verbose $VERSION
     @parents @ISA @EXPORT
     %children %desc %level %next %prev %section %title %up
@@ -33,7 +32,12 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(update_menus);
 
-$VERSION = '1.01';  # Also update VERSION section in documentation
+$VERSION = '1.02';
+
+our %layersForEncoding = (qw(
+  UTF-8        :utf8
+  US-ASCII) => ''
+);
 
 #=====================================================================
 # Subroutines:
@@ -67,6 +71,7 @@ sub update_menus
 
     $masterMenu = 0;
     $menuMark = '*';
+    $layers = '';
 
     undef $node;        # We are not in any node yet
     undef $level;       undef %next;
@@ -183,7 +188,8 @@ sub readStructure
 
     my $handle   = IO::File->new;
 
-    open($handle,'<', $filename) or abort($filename,0,"Unable to open");
+  openFile:
+    open($handle, "<$layers", $filename) or abort($filename,0,"Unable to open");
 
   line:
     while (<$handle>) {
@@ -273,6 +279,22 @@ EOT
         elsif (/^ *\@include +(\S+)\s/) {
             readStructure($1);
         }
+        elsif (/^ *\@documentencoding +(\S+)\s/) {
+            my $wantLayers = $layersForEncoding{$1};
+            $wantLayers = ":encoding($1)" unless defined $wantLayers;
+
+            if ($layers) {
+              abort($filename, -1, "Cannot switch from $layers to $wantLayers")
+                  if $layers ne $wantLayers;
+            } elsif ($wantLayers) {
+              abort($filename, -1,
+                    '@documentencoding must come before structuring commands')
+                  if defined $node;
+              $layers = $wantLayers;
+              close $handle;
+              goto openFile;
+            }
+        }
     } # end while
 
     close $handle;
@@ -308,8 +330,8 @@ sub writeMenus
     my $inHandle  = IO::File->new;
     my $outHandle = IO::File->new;
 
-    open($inHandle, '<', "$filename#~") or die "Unable to open $filename#~";
-    open($outHandle,'>', $filename)     or die "Unable to open $filename";
+    open($inHandle,"<$layers","$filename#~") or die "Unable to open $filename#~";
+    open($outHandle,">$layers",$filename)    or die "Unable to open $filename";
 
     my $oldHandle = select $outHandle;
 
@@ -392,15 +414,14 @@ Texinfo::Menus - Update node links and menus in Texinfo documents
 
 =head1 VERSION
 
-This document describes Texinfo::Menus version 1.01
-
+This document describes version 1.02 of
+Texinfo::Menus, released December 7, 2010.
 
 =head1 SYNOPSIS
 
   use Texinfo::Menus;
 
   update_menus($filename, verbose => 1);
-
 
 =head1 DESCRIPTION
 
@@ -431,54 +452,66 @@ This comment (if present) must come B<after> the structuring command.
 B<update_menus> normally adds comments to the master menu to retain the
 descriptions of subsection and lesser nodes.  (This is useful when the
 subfiles are automatically generated and the descriptions are added by
-hand.)  Use C<<comments => 0>> to prevent this.
+hand.)  Use C<< comments => 0 >> to prevent this.
 
 =item B<detailed>
 
 Normally, B<update_menus> generates a detailed node listing (consisting of
 the section nodes for each chapter) following the master menu.  Use
-C<<detailed => 0>> to omit the detailed node listing.
+C<< detailed => 0 >> to omit the detailed node listing.
 
 =item B<verbose>
 
 The B<verbose> option causes B<update_menus> to generate a warning
 message if it finds multiple descriptions for a node (only one of
-which will be used).  Use C<<verbose => 1>> to enable this.
+which will be used).  Use C<< verbose => 1 >> to enable this.
 
 =back
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+Texinfo::Menus requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 
 None.
 
-
 =head1 INCOMPATIBILITIES
 
 None reported.
-
 
 =head1 BUGS AND LIMITATIONS
 
 Texinfo::Menus cannot handle C<@include> inside a menu.
 
 
+=for Pod::Coverage
+^abort$
+^printMasterMenu$
+^printMenu$
+^printMenuComment$
+^readStructure$
+^writeMenus$
+^update_menus$
+
 =head1 AUTHOR
 
-Christopher J. Madsen  C<< <perl AT cjmweb.net> >>
+Christopher J. Madsen  S<C<< <perl AT cjmweb.net> >>>
 
 Please report any bugs or feature requests to
-S<< C<< <bug-Texinfo-Menus AT rt.cpan.org> >> >>,
+S<C<< <bug-Texinfo-Menus AT rt.cpan.org> >>>,
 or through the web interface at
 L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Texinfo-Menus>
 
+You can follow or contribute to Texinfo-Menus's development at
+L<< http://github.com/madsen/texinfo-menus >>.
 
-=head1 LICENSE AND COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-Copyright 1994-2007 Christopher J. Madsen. All rights reserved.
+This software is copyright (c) 2010 by Christopher J. Madsen.
 
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself. See L<perlartistic>.
-
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =head1 DISCLAIMER OF WARRANTY
 
@@ -502,3 +535,5 @@ RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
 FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
 SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
+
+=cut

@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #---------------------------------------------------------------------
-# $Id: 30.verbose.t 1584 2006-11-03 04:56:03Z cjm $
+# 30.verbose.t
 #
 # Copyright 2006 Christopher J. Madsen
 #
