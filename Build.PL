@@ -12,7 +12,7 @@ use lib $FindBin::Bin; # Make sure we're using My_Build from our distribution
 
 use inc::My_Build;     # Our customized version of Module::Build
 
-my $builder = inc::My_Build->new(
+my %module_build_args = (
   module_name        => 'Texinfo::Menus',
   license            => 'perl',
   dist_author        => 'Christopher J. Madsen <perl@cjmweb.net>',
@@ -22,19 +22,41 @@ my $builder = inc::My_Build->new(
   add_to_cleanup     => [ 't/testing' ],
   # Prerequisites inserted by DistZilla:
   'build_requires' => {
-    'Module::Build' => '0.21',
-    'Test::More' => '0.88'
+    'Module::Build' => '0.21'
   },
   'configure_requires' => {
+    'Cwd' => '0',
+    'File::Spec' => '0',
     'FindBin' => '0',
-    'Module::Build' => '0.21'
+    'Module::Build' => '0.21',
+    'perl' => '5.008'
   },
   'requires' => {
     'Exporter' => '0',
     'IO::File' => '0',
-    'perl' => '5.8.0'
+    'perl' => '5.008'
+  },
+  'test_requires' => {
+    'Config' => '0',
+    'FindBin' => '0',
+    'Test::More' => '0.88'
   },
 );
+
+unless ( eval { Module::Build->VERSION(0.4004) } ) {
+  my $tr = delete $module_build_args{test_requires};
+  my $br = $module_build_args{build_requires};
+  for my $mod ( keys %$tr ) {
+    if ( exists $br->{$mod} ) {
+      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
+    }
+    else {
+      $br->{$mod} = $tr->{$mod};
+    }
+  }
+}
+
+my $builder = inc::My_Build->new(%module_build_args);
 
 my @scripts;
 

@@ -20,19 +20,19 @@ use 5.008;
 
 use IO::File;
 use strict;
-use vars qw(
-    $descColumn $layers $level $masterMenu $menuMark $node $printKids $section
-    $No_Comments $No_Detail $Verbose $VERSION
-    @parents @ISA @EXPORT
-    %children %desc %level %next %prev %section %title %up
+our (
+    $descColumn,$layers,$level,$masterMenu,$menuMark,$node,$printKids,$section,
+    $No_Comments,$No_Detail,$Verbose,
+    @parents,
+    %children,%desc,%level,%next,%prev,%section,%title,%up,
 );
 
 require Exporter;
 
-@ISA = qw(Exporter);
-@EXPORT = qw(update_menus);
+our @ISA = qw(Exporter);
+our @EXPORT = qw(update_menus);
 
-$VERSION = '1.02';
+our $VERSION = '1.03';
 
 our %layersForEncoding = (qw(
   UTF-8        :utf8
@@ -414,8 +414,8 @@ Texinfo::Menus - Update node links and menus in Texinfo documents
 
 =head1 VERSION
 
-This document describes version 1.02 of
-Texinfo::Menus, released December 7, 2010.
+This document describes version 1.03 of
+Texinfo::Menus, released September 28, 2013.
 
 =head1 SYNOPSIS
 
@@ -498,17 +498,17 @@ Texinfo::Menus cannot handle C<@include> inside a menu.
 
 Christopher J. Madsen  S<C<< <perl AT cjmweb.net> >>>
 
-Please report any bugs or feature requests to
-S<C<< <bug-Texinfo-Menus AT rt.cpan.org> >>>,
+Please report any bugs or feature requests
+to S<C<< <bug-Texinfo-Menus AT rt.cpan.org> >>>
 or through the web interface at
-L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Texinfo-Menus>
+L<< http://rt.cpan.org/Public/Bug/Report.html?Queue=Texinfo-Menus >>.
 
 You can follow or contribute to Texinfo-Menus's development at
 L<< http://github.com/madsen/texinfo-menus >>.
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Christopher J. Madsen.
+This software is copyright (c) 2013 by Christopher J. Madsen.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
